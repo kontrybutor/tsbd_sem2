@@ -124,3 +124,9 @@ dmypy.json
 
 # Idea env
 .idea/
+
+# Custom
+*.pdf
+*.doc
+*.DS_Store
+*.vscode
