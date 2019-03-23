@@ -20,5 +20,7 @@ for name in names[:-1]:
     print_statistics(name)
     print()
 
+# TODO: print dominant for Diagnosis
+
 
 
