@@ -4,7 +4,7 @@ from collections import Counter
 
 INPUT_FILE_NAME = "log.txt"
 OUTPUT_FILE_NAME = "parsed_log.txt"
-NUMBER_OF_LINES = 500
+NUMBER_OF_LINES = 50
 
 
 def preprocess_log():
@@ -21,16 +21,18 @@ class Parser(object):
 
     def filter_log(self):
         """TBD..."""
-
+        media_exts = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.gif', '.GIF', '.bmp', '.BMP', '.png', '.PNG', '.mpg', '.MPG']
         with open(OUTPUT_FILE_NAME) as processed_file:
             lines = [next(processed_file) for _ in range(NUMBER_OF_LINES)]
             print("Before filtering are", len(lines), "lines.")
             for line in lines:
-                # TODO: refactor this sometime...
-                if "GET" in line and "200" in line and ".jpg" not in line and ".gif" not in line and ".bmp" not in line:
-                    self.filtered_lines.append(line)
+                if "GET" in line and "200" in line:
+                    if any(word in line for word in media_exts):
+                        continue
+                    else:
+                        self.filtered_lines.append(line)
 
-        print("After filtering are", len(self.filtered_lines), "lines.")
+        print("After filtering there are", len(self.filtered_lines), "lines.")
 
     def extract_values_into_dict(self):
         """TBD..."""
@@ -42,33 +44,37 @@ class Parser(object):
             filtered_extracted_values = dict(
                 (k, extracted_data_from_line[k]) for k in keys if k in extracted_data_from_line)
             self.list_of_extracted_lines.append(filtered_extracted_values)
-        # pprint(self.list_of_extracted_lines)
 
-    def count_occurences(self, key):
-
-        print("Całkowita liczba", key, "wynosi", len(self.list_of_extracted_lines))
-        print("Całkowita liczba", key, "wynosi", len(self.list_of_extracted_lines))
-        print("Dla klucza:", key)
+    def count_occurrences(self, key):
 
         total_count = 0
         occurrences = Counter(k[key] for k in self.list_of_extracted_lines if k.get(key))
         for occurrence, count in occurrences.most_common():
-            print(occurrence, count)
+            # print(occurrence, count)
             total_count += count
 
         print("Całkowita liczba wynosi:", total_count)
 
+    def extract_distinct_users(self):
+
+        pprint(self.list_of_extracted_lines)
+        distinct_user_list = []
+        for elem in self.list_of_extracted_lines:
+            if elem['remote_host'] not in distinct_user_list:
+                distinct_user_list.append(elem['remote_host'])
+        pprint(distinct_user_list)
+
 
 def main():
-
     # preprocess_log()
 
     parser = Parser()
 
     parser.filter_log()
     parser.extract_values_into_dict()
-    parser.count_occurences('remote_host')
-    parser.count_occurences('request_url')
+    parser.count_occurrences('remote_host')
+    parser.count_occurrences('request_url')
+    parser.extract_distinct_users()
 
 
 if __name__ == "__main__":

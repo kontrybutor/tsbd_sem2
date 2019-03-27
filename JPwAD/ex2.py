@@ -2,7 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import shapiro, ttest_1samp, normaltest, mannwhitneyu
+from scipy.stats import ttest_1samp, normaltest
 
 
 def load_quakes():
@@ -10,7 +10,6 @@ def load_quakes():
     quakes_df = pd.read_csv(filename, sep=",", )
     quakes_df = quakes_df.drop('index', 1)
     return quakes_df
-    # depth = quakes_df['depth']
 
 
 def load_births():
