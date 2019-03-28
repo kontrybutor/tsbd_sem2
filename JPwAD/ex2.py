@@ -2,21 +2,17 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import ttest_1samp, normaltest
+from scipy.stats import ttest_1samp, normaltest, mannwhitneyu, shapiro
+from statsmodels.stats.weightstats import ztest
+
+births_filename = 'births.csv'
+quakes_filename = 'quakes.csv'
 
 
-def load_quakes():
-    filename = 'quakes.csv'
-    quakes_df = pd.read_csv(filename, sep=",", )
-    quakes_df = quakes_df.drop('index', 1)
-    return quakes_df
-
-
-def load_births():
-    filename = 'births.csv'
-    births_df = pd.read_csv(filename, sep=",")
-    births_df = births_df.drop('index', 1)
-    return births_df
+def load_dataset(filename):
+    df = pd.read_csv(filename, sep=",")
+    df = df.drop('index', 1)
+    return df
 
 
 def plot_histogram(data):
@@ -29,42 +25,43 @@ def plot_histogram(data):
 
 def check_normality(data):
     stat, p = normaltest(data)  # test for normality
-    print('statistics =', stat, 'p =', p)
     alpha = 0.05
-    if p < alpha:
-        print('Samples are normally distributed, the null hypothesis can be rejected')
+    if p < alpha:  # null hypothesis: data comes from a normal distribution
+        print('The null hypothesis can be rejected')
     else:
-        print('Samples are not normally distributed, the null hypothesis cannot be rejected')
+        print('The null hypothesis cannot be rejected')
 
 
 def test_hypothesis(data, hypothesis):
-    stat, p = ttest_1samp(a=data, popmean=hypothesis)
+    # stat, p = ttest_1samp(a=data, popmean=hypothesis)
+    # stat, p = mannwhitneyu(data, hypothesis)
+    stat, p = ztest(data, value=hypothesis)
     alpha = 0.05
     if p < alpha:
-        print('Reject null hypothesis, mean is less than', hypothesis)
+        print('The null hypothesis can be rejected')
     else:
-        print('Accept null hypothesis')
+        print('The null hypothesis cannot be rejected')
 
 
 def main():
-    depths = load_quakes()['depth']
+    depths = load_dataset(quakes_filename)['depth']
 
-    print("Normality test for depths...")
+    print("NULL HYPOTHESIS: Depths are normally distributed")
     check_normality(depths)
     plot_histogram(depths)
     print("Mean is: ", depths.mean())
-    print("Test hypothesis for depths...")
-    test_hypothesis(depths, 10000.0)
+    print("NULL HYPOTHESIS: Average of quake's depth is 300m")
+    test_hypothesis(depths, 300)
 
-    print()
+    print('-------------------------')
 
-    births = load_births()['births']
-    print("Normality test for births...")
+    births = load_dataset(births_filename)['births']
+    print("NULL HYPOTHESIS: Births are normally distributed")
     check_normality(births)
     plot_histogram(births)
     print("Mean is: ", births.mean())
-    print("Test hypothesis for births...")
-    test_hypothesis(births, 300.0)
+    print("NULL HYPOTHESIS: Average of daily births is 10000")
+    test_hypothesis(births, [10000])
 
 
 if __name__ == "__main__":
