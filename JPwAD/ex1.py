@@ -1,4 +1,4 @@
-import numpy as np
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -11,16 +11,18 @@ fertility_df = pd.read_csv(filename, sep=",", header=None, names=names)
 
 
 def print_statistics(attribute):  # cechy ilościowe
+    print("Statistics for:", attribute)
     attr = fertility_df[attribute]
     print("Median is:", attr.mean())
     print("Max value is:", attr.max())
     print("Min value is", attr.min())
 
 
-def print_dominant_for_diagnosis():  # cecha jakościowa
-    attr = fertility_df['Diagnosis']
+def print_dominant(attribute):  # cecha jakościowa
+    print("Statistics for:", attribute)
+    attr = fertility_df[attribute]
     values = attr.value_counts()
-    print("There are following values in Diagnosis attribute:")
+    print("There are following values in attribute:", attribute)
     print(values)
     dominant = attr.value_counts().idxmax()
     print("The most common value is: {}".format(dominant))
@@ -51,11 +53,18 @@ def plot_histogram(data):
 
 
 def main():
-    for name in names[:-1]:
-        print("Statistics for:", name)
+    continuous_attrs = ['Age', 'Sitting hours']
+    discrete_attrs = [
+        'Season', 'Childish diseases', 'Accident', 'Surgical intervention',
+        'High fevers', 'Alcohol consumption', 'Smoking habit', 'Diagnosis']
+    for name in continuous_attrs:
         print_statistics(name)
         print()
-    print_dominant_for_diagnosis()
+
+    for name in discrete_attrs:
+        print_dominant(name)
+        print()
+
     compute_correlation()
     plot_histogram(fertility_df["Age"])
     plot_histogram(fertility_df['Sitting hours'])

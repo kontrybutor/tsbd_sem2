@@ -1,7 +1,9 @@
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import normaltest, ttest_ind, mannwhitneyu, shapiro, chi2
+import numpy as np
+from scipy.stats import mannwhitneyu, shapiro, norm
 
 
 footballers_filename = 'footballers.csv'
@@ -28,6 +30,31 @@ def plot_histogram(data1, data2):
     plt.show()
 
 
+def plot_histogram2(data1, data2):
+    plt.figure()
+    plt.subplot(211)
+    mu_1, std_1 = norm.fit(data1)
+    plt.hist(data1, bins=30, density=True)
+    x = np.linspace(data1.min(), data1.max(), 1000)
+    y = norm.pdf(x, mu_1, std_1)
+    plt.plot(x, y)
+    plt.title('Starting Pitchers')
+    plt.legend(('Gauss approximation', 'Weight'))
+    plt.ylabel('Weight')
+    plt.grid(True)
+    plt.subplot(212)
+    mu_2, std_2 = norm.fit(data2)
+    plt.hist(data2, bins=30, density=True)
+    x = np.linspace(data2.min(), data2.max(), 1000)
+    y = norm.pdf(x, mu_2, std_2)
+    plt.plot(x, y)
+    plt.legend(('Gauss approximation', 'Weight'))
+    plt.title('Relief Pitchers')
+    plt.ylabel('Weight')
+    plt.grid(True)
+    plt.show()
+
+
 def check_normality(data):
     stat, p = shapiro(data)  # test for normality
     alpha = 0.05
@@ -38,7 +65,6 @@ def check_normality(data):
 
 
 def test_hypothesis(data1, data2):
-    # _, p = ttest_ind(data1, data2)
     _, p = mannwhitneyu(data1, data2)
     alpha = 0.05
     print("p-value = {}".format(p))
@@ -63,6 +89,10 @@ def main():
 
     print("NULL HYPOTHESIS: Weight can be used to distinguish players on Starting_Pitcher and Relief_Pitcher positions")
     test_hypothesis(starting_pitchers, relief_pitchers)
+
+    plot_histogram(starting_pitchers, relief_pitchers)
+    plot_histogram2(starting_pitchers, relief_pitchers)
+
 
 
 if __name__ == "__main__":

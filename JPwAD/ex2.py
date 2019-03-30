@@ -18,20 +18,19 @@ def load_dataset(filename):
 def plot_histogram(data):
     plt.figure(figsize=(12, 10))
     sns.set_style('darkgrid')
-    ax = sns.distplot(data, kde=False,)
+    ax = sns.distplot(data, kde=True,)
     ax.set(ylabel='count')
     plt.show()
 
 
 def plot_histogram2(data):
-    births_mean = data.mean()
-    births_std = np.std(data)
     plt.figure()
-    plt.hist(data, density=True)
+    mu, std = norm.fit(data)
+    plt.hist(data, bins=30, density=True)
     x = np.linspace(data.min(), data.max(), 1000)
-    y = norm.pdf(x, births_mean, births_std)
+    y = norm.pdf(x, mu, std)
     plt.plot(x, y)
-    plt.plot(10000, norm.pdf(10000, births_mean, births_std), marker='o', markersize=3, color="red")
+    plt.plot(10000, norm.pdf(10000, mu, std), marker='o', markersize=3, color="red")
     plt.legend(('Gauss approximation', 'Point', 'Births'))
     plt.title('Histogram')
     plt.xlabel('Births')
@@ -43,6 +42,7 @@ def plot_histogram2(data):
 def check_normality(data):
     stat, p = normaltest(data)  # test for normality
     alpha = 0.05
+    print("p-value = {}".format(p))
     if p < alpha:  # null hypothesis: data comes from a normal distribution
         print('The null hypothesis can be rejected')
     else:
@@ -59,16 +59,6 @@ def test_hypothesis(data, hypothesis):
 
 
 def main():
-    depths = load_dataset(quakes_filename)['depth']
-
-    print("NULL HYPOTHESIS: Depths are normally distributed")
-    check_normality(depths)
-    plot_histogram(depths)
-    print("Mean is: ", depths.mean())
-    print("NULL HYPOTHESIS: Average of quake's depth is 300m")
-    test_hypothesis(depths, 300)
-
-    print('-------------------------')
 
     births = load_dataset(births_filename)['births']
     print("NULL HYPOTHESIS: Births are normally distributed")
