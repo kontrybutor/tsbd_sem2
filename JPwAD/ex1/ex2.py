@@ -1,41 +1,31 @@
 
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import ttest_1samp, normaltest, mannwhitneyu, shapiro, norm
+import numpy as np
+from scipy.stats import ttest_1samp, normaltest, mannwhitneyu, norm
 
 births_filename = 'births.csv'
-quakes_filename = 'quakes.csv'
 
 
 def load_dataset(filename):
     df = pd.read_csv(filename, sep=",")
     df = df.drop('index', 1)
+
     return df
 
 
 def plot_histogram(data):
     plt.figure(figsize=(12, 10))
     sns.set_style('darkgrid')
-    ax = sns.distplot(data, kde=True,)
-    ax.set(ylabel='count')
-    plt.show()
-
-
-def plot_histogram2(data):
-    plt.figure()
     mu, std = norm.fit(data)
-    plt.hist(data, bins=30, density=True)
-    x = np.linspace(data.min(), data.max(), 1000)
-    y = norm.pdf(x, mu, std)
-    plt.plot(x, y)
+    ax = sns.distplot(data, kde=False, fit=norm)
     plt.plot(10000, norm.pdf(10000, mu, std), marker='o', markersize=3, color="red")
+    ax.set(ylabel='count')
     plt.legend(('Gauss approximation', 'Point', 'Births'))
     plt.title('Histogram')
     plt.xlabel('Births')
     plt.ylabel('Amount')
-    plt.grid(True)
     plt.show()
 
 
@@ -50,8 +40,20 @@ def check_normality(data):
 
 
 def test_hypothesis(data, hypothesis):
-    stat, p = ttest_1samp(a=data, popmean=hypothesis)
+    print("Test t-Studenta:")
     alpha = 0.05
+    stat, p = ttest_1samp(a=data, popmean=hypothesis)
+    print("p-value = {}".format(p))
+    if p < alpha:
+        print('The null hypothesis can be rejected')
+    else:
+        print('The null hypothesis cannot be rejected')
+
+    print("Test U-Manna-Whitneya:")
+    # random = np.random.normal(10000, 0.1, 10000)
+    # stat, p = mannwhitneyu(data, random)
+    stat, p = mannwhitneyu(data, [hypothesis])
+    print("p-value = {}".format(p))
     if p < alpha:
         print('The null hypothesis can be rejected')
     else:
@@ -59,14 +61,12 @@ def test_hypothesis(data, hypothesis):
 
 
 def main():
-
-    births = load_dataset(births_filename)['births']
-    print("NULL HYPOTHESIS: Births are normally distributed")
+    births = load_dataset(births_filename).get('births')
+    print("Null hypothesis: data comes from a normal distribution")
     check_normality(births)
+    print("--------------------------------")
     plot_histogram(births)
-    plot_histogram2(births)
-    print("Mean is: ", births.mean())
-    print("NULL HYPOTHESIS: Average of daily births is 10000")
+    print("Null hypothesis: Average of daily births is 10000")
     test_hypothesis(births, 10000)
 
 

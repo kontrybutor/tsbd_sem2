@@ -21,9 +21,10 @@ class Parser(object):
         self.filtered_lines = []
         self.list_of_extracted_lines = []
         self.distinct_user_list = []
+        self.most_visited_urls_list = []
 
     def filter_log(self):
-        """TBD..."""
+
         media_exts = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.gif', '.GIF', '.bmp', '.BMP', '.png', '.PNG', '.mpg', '.MPG']
         with open(OUTPUT_FILE_NAME) as processed_file:
             lines = [next(processed_file) for _ in range(NUMBER_OF_LINES)]
@@ -38,7 +39,7 @@ class Parser(object):
         print("Po filtracji zostało", len(self.filtered_lines), "linii.")
 
     def extract_values_into_dict(self):
-        """TBD..."""
+
         keys = ['remote_host', 'request_url', 'time_received_datetimeobj', 'request_method', 'request_first_line', ]
         line_parser = apache_log_parser.make_parser("%h %t \"%r\" %s %b")
         for line in self.filtered_lines:
@@ -47,15 +48,17 @@ class Parser(object):
                 (k, extracted_data_from_line[k]) for k in keys if k in extracted_data_from_line)
             self.list_of_extracted_lines.append(filtered_extracted_values)
 
-    def count_occurrences(self, key):
+    def extract_most_visited_urls(self):
 
-        total_count = 0
-        occurrences = Counter(k[key] for k in self.list_of_extracted_lines if k.get(key))
+        total_count = len(self.filtered_lines)
+        occurrences = Counter(k['request_url'] for k in self.list_of_extracted_lines if k.get('request_url'))
         for occurrence, count in occurrences.most_common():
-            # print(occurrence, count)
-            total_count += count
+            if count/total_count > 0.005:
+                self.most_visited_urls_list.append(occurrence)
 
-        print("Całkowita liczba wynosi:", total_count)
+        # pprint(self.most_visited_urls_list)
+        print("Liczba najczesciej odwiedzanych stron wynosi:", len(self.most_visited_urls_list))
+        print("Całkowita liczba odwiedzanych stron wynosi:", total_count)
 
     def extract_distinct_users(self):
 
@@ -65,9 +68,11 @@ class Parser(object):
         print("Liczba unikalnych użytkowników wynosi:", len(self.distinct_user_list))
 
     def extract_sessions(self):
+
         sessions = {}
         user_session = {}
         offset = timedelta(minutes=30)
+
         for elem in self.list_of_extracted_lines:
             sessions.setdefault(elem['remote_host'], [])
             sessions[elem['remote_host']].append(elem['time_received_datetimeobj'])
@@ -86,6 +91,7 @@ class Parser(object):
             if cnt > 1:
                 sessions_count += 1
             user_session[user] = sessions_count
+        # pprint(user_session)
 
         total = 0
         for item in user_session.values():
@@ -100,6 +106,7 @@ def main():
     parser.filter_log()
     parser.extract_values_into_dict()
     # parser.count_occurrences('remote_host')
+    parser.extract_most_visited_urls()
     # parser.count_occurrences('request_url')
     parser.extract_distinct_users()
     parser.extract_sessions()

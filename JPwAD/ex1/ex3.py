@@ -15,7 +15,7 @@ def load_dataset(filename):
     return df
 
 
-def plot_histogram(data1, data2):
+def plot_density_function(data1, data2):
     plt.figure(1, figsize=(12, 10))
     sns.distplot(data1, hist=False, kde=True,
                  kde_kws={'shade': True, 'linewidth': 3},
@@ -30,7 +30,7 @@ def plot_histogram(data1, data2):
     plt.show()
 
 
-def plot_histogram2(data1, data2):
+def plot_histogram(data1, data2):
     plt.figure()
     plt.subplot(211)
     mu_1, std_1 = norm.fit(data1)
@@ -87,12 +87,12 @@ def main():
 
     print('-----------------------------------')
 
-    print("NULL HYPOTHESIS: Weight can be used to distinguish players on Starting_Pitcher and Relief_Pitcher positions")
+    print("NULL HYPOTHESIS: Weight cannot be used to distinguish players "
+          "on Starting_Pitcher and Relief_Pitcher positions")
     test_hypothesis(starting_pitchers, relief_pitchers)
 
+    plot_density_function(starting_pitchers, relief_pitchers)
     plot_histogram(starting_pitchers, relief_pitchers)
-    plot_histogram2(starting_pitchers, relief_pitchers)
-
 
 
 if __name__ == "__main__":
