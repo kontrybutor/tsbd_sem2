@@ -1,10 +1,10 @@
 import apache_log_parser
 from pprint import pprint
-from collections import Counter, defaultdict
+from collections import Counter, OrderedDict
 from datetime import datetime, MINYEAR, timedelta
 INPUT_FILE_NAME = "log.txt"
 OUTPUT_FILE_NAME = "parsed_log.txt"
-NUMBER_OF_LINES = 50000
+NUMBER_OF_LINES = 5000
 
 
 def preprocess_log():
@@ -72,30 +72,41 @@ class Parser(object):
         sessions = {}
         user_session = {}
         offset = timedelta(minutes=30)
+        first_page_time = 0
+        last_page_time = 0
 
         for elem in self.list_of_extracted_lines:
-            sessions.setdefault(elem['remote_host'], [])
-            sessions[elem['remote_host']].append(elem['time_received_datetimeobj'])
-        for user, date_list in sessions.items():
+            sessions.setdefault(elem['remote_host'], {})
+            sessions[elem['remote_host']].update({elem['time_received_datetimeobj']: elem['request_url']})
+
+        # pprint (sessions)
+        for user, url_time in sessions.items():
             first_timestamp = datetime(year=MINYEAR, month=1, day=1)
             sessions_count = 0
             cnt = 0
-            for date in date_list:
+            for date, url in url_time.items():
+                user_session.setdefault(user, [])
                 if date - first_timestamp > offset:
                     if cnt > 1:
                         sessions_count += 1
+                        user_session[user].append({url: date})
                     first_timestamp = date
                     cnt = 1
                 else:
                     cnt += 1
             if cnt > 1:
                 sessions_count += 1
-            user_session[user] = sessions_count
-        # pprint(user_session)
+                user_session[user].append({url: date})
+
+            user_session[user].append(sessions_count)
+
+            if user_session[user][-1] > 1:
+
+                pprint(user_session[user])
 
         total = 0
         for item in user_session.values():
-            total += item
+            total += item[-1]
         print("Liczba sesji wynosi:", total)
 
 
