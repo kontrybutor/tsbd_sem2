@@ -9,12 +9,15 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.impute import SimpleImputer
 from fancyimpute import KNN
 
-
 #  https://github.com/mohitpawar473/USA-Housing-Dataset
+
+coef = 0
+intercept = 0
 
 
 def load_dataset(filename):
     df = pd.read_csv(filename, sep=",")
+
     df = df.drop(['Address', 'Avg. Area House Age', 'Avg. Area Number of Rooms',
                   'Avg. Area Number of Bedrooms', 'Area Population'], 1)
 
@@ -45,6 +48,8 @@ def print_stats(df, show=False):
         print()
         print(df.isnull().sum())
 
+        # print(df.loc[[1536]])
+
         values_count = df.count().sum()
         print("There are", values_count, "values in total")
         missed_values = df.isnull().sum().sum()
@@ -57,6 +62,8 @@ def generate_missing_values(df, ratio):
     ix = [(row, col) for row in range(df.shape[0]) for col in range(df.shape[1])]
     for row, col in random.sample(ix, int(round(ratio * (len(ix))))):
         df.iat[row, col] = np.nan
+
+    # df.iat[1536, 0] = np.nan
 
     return df
 
@@ -84,6 +91,10 @@ def do_linear_regression(df, plot=True, plot_title=""):
     lm.fit(x_train, y_train)
 
     predictions = lm.predict(x_test)
+
+    global coef, intercept
+    coef = lm.coef_[0]
+    intercept = lm.intercept_
 
     if plot:
         plt.figure(figsize=(12, 12))
@@ -115,9 +126,9 @@ def fill_missing_values_with_mean(df):
 def fill_missing_values_with_linear_regression_coefs(df):
     for index, row in df.iterrows():
         if pd.isnull(row['Price'].item()):
-            df.at[index, 'Price'] = (19.34805675 * row['Avg. Area Income'] - 92353.97)
+            df.at[index, 'Price'] = (coef * row['Avg. Area Income'] + intercept)
         elif pd.isnull(row['Avg. Area Income'].item()):
-            df.at[index, 'Avg. Area Income'] = ((row['Price'] + 92353.97) / 19.34805675)
+            df.at[index, 'Avg. Area Income'] = ((row['Price'] - intercept) / coef)
     return df
 
 
@@ -140,17 +151,17 @@ def main():
     # compute_correlation(usa_housing_df_with_nans, True)
     # visualize_data(usa_housing_df_with_nans)
 
-    print("WITH KNN FILLING")
-    usa_housing_df_knn_filled = fill_missing_values_with_hot_deck(usa_housing_df_with_nans)
-    print_stats(usa_housing_df_knn_filled, show=True)
-    do_linear_regression(usa_housing_df_knn_filled, plot=True,
-                         plot_title="Missing values replaced by hot-deck method")
-
     print("ROWS WITH NANS DROPPED")
     usa_housing_df_without_nans = drop_nan_values(usa_housing_df_with_nans)
     print_stats(usa_housing_df_without_nans, show=True)
     do_linear_regression(usa_housing_df_without_nans, plot=True,
                          plot_title="Rows with missing values dropped")
+
+    print("WITH KNN FILLING")
+    usa_housing_df_knn_filled = fill_missing_values_with_hot_deck(usa_housing_df_with_nans)
+    print_stats(usa_housing_df_knn_filled, show=True)
+    do_linear_regression(usa_housing_df_knn_filled, plot=True,
+                         plot_title="Missing values replaced by hot-deck method")
 
     print("REPLACED NANS WITH MEAN")
     usa_housing_df_mean_imputed = fill_missing_values_with_mean(usa_housing_df_with_nans)
