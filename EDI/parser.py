@@ -4,7 +4,7 @@ from collections import Counter, OrderedDict
 from datetime import datetime, MINYEAR, timedelta
 INPUT_FILE_NAME = "log.txt"
 OUTPUT_FILE_NAME = "parsed_log.txt"
-NUMBER_OF_LINES = 5000
+NUMBER_OF_LINES = 5005
 
 
 def preprocess_log():
@@ -85,29 +85,27 @@ class Parser(object):
             sessions_count = 0
             cnt = 0
             for date, url in url_time.items():
-                user_session.setdefault(user, [])
+
                 if date - first_timestamp > offset:
                     if cnt > 1:
                         sessions_count += 1
-                        user_session[user].append({url: date})
                     first_timestamp = date
                     cnt = 1
                 else:
                     cnt += 1
+                temp_user = user + '_' + str(sessions_count)
+                user_session.setdefault(temp_user, [])
+                user_session[temp_user].append({url: date})
             if cnt > 1:
                 sessions_count += 1
-                user_session[user].append({url: date})
 
-            user_session[user].append(sessions_count)
-
-            if user_session[user][-1] > 1:
-
-                pprint(user_session[user])
+            pprint(user_session)
+                # pprint(user_session[user])
 
         total = 0
-        for item in user_session.values():
-            total += item[-1]
-        print("Liczba sesji wynosi:", total)
+        # for item in user_session.values():
+        #     total += item[-1]
+        # print("Liczba sesji wynosi:", total)
 
 
 def main():
