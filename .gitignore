@@ -130,3 +130,5 @@ dmypy.json
 *.doc
 *.DS_Store
 *.vscode
+*.zip
+*.ods
