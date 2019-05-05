@@ -1,8 +1,8 @@
 import csv
 import apache_log_parser
 from pprint import pprint
-from collections import Counter, OrderedDict
-from datetime import datetime, MINYEAR, timedelta
+from collections import Counter
+from datetime import timedelta
 
 
 INPUT_FILE_NAME = "log.txt"
@@ -26,7 +26,6 @@ class Data(object):
         self.time_received_datetimeobj = []
         self.request_method = []
         self.request_first_line = []
-        self.avg_session = None
         self.session_time = None
 
     def add(self, *args):
@@ -40,17 +39,25 @@ class Data(object):
         self.request_first_line.append(request_first_line)
 
     def get(self, i):
-        return self.request_url[i], self.time_received_datetimeobj[i], self.request_method[i], self.request_first_line[
-            i]
+        return (self.request_url[i],
+                self.time_received_datetimeobj[i],
+                self.request_method[i],
+                self.request_first_line[i])
 
     def __str__(self):
         if self.session is not None:
-            string = "{}:sesja={}\n{}\n{}\n{}\n{}\n".format(self.host_name, self.session, self.request_url,
-                                                            self.time_received_datetimeobj, self.request_method,
+            string = "{}:sesja={}\n{}\n{}\n{}\n{}\n".format(self.host_name,
+                                                            self.session,
+                                                            self.request_url,
+                                                            self.time_received_datetimeobj,
+                                                            self.request_method,
                                                             self.request_first_line)
         else:
-            string = "{}\n{}\n{}\n{}\n{}\n".format(self.host_name, self.request_url, self.time_received_datetimeobj,
-                                                   self.request_method, self.request_first_line)
+            string = "{}\n{}\n{}\n{}\n{}\n".format(self.host_name,
+                                                   self.request_url,
+                                                   self.time_received_datetimeobj,
+                                                   self.request_method,
+                                                   self.request_first_line)
         return string
 
     def __len__(self):
@@ -70,7 +77,6 @@ class Parser(object):
         self.unique_users_with_urls = {}
 
     def filter_log(self):
-
         media_exts = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.gif', '.GIF', '.bmp', '.BMP', '.png', '.PNG', '.mpg', '.MPG']
         with open(OUTPUT_FILE_NAME) as processed_file:
             lines = [next(processed_file) for _ in range(NUMBER_OF_LINES)]
@@ -86,7 +92,6 @@ class Parser(object):
         print("Po filtracji zostało", len(self.filtered_lines), "linii.")
 
     def extract_values_into_dict(self):
-        """HELPER FUNCTION"""
         keys = ['remote_host', 'request_url']
         line_parser = apache_log_parser.make_parser("%h %t \"%r\" %s %b")
         for line in self.copy_filtered_lines:
@@ -96,7 +101,6 @@ class Parser(object):
             self.list_of_extracted_lines.append(filtered_extracted_values)
 
     def extract_values_into_data(self):
-
         keys = ['request_url', 'time_received_datetimeobj', 'request_method', 'request_first_line', ]
         line_parser = apache_log_parser.make_parser("%h %t \"%r\" %s %b")
         for line in self.filtered_lines:
@@ -111,25 +115,24 @@ class Parser(object):
             )
 
     def extract_most_visited_urls(self):
-
         total_count = len(self.filtered_lines)
         occurrences = Counter(k['request_url'] for k in self.list_of_extracted_lines if k.get('request_url'))
         for occurrence, count in occurrences.most_common():
             if count / total_count > 0.005:
+                # print(occurrence,  '{:.2f}%'.format(count/total_count*100))
                 self.most_visited_urls_list.append(occurrence)
 
-        print("@ATTRIBUTE", 'session_time', 'NUMERIC')
-        print("@ATTRIBUTE", 'avg_session_time', 'NUMERIC')
-        print("@ATTRIBUTE", 'visited_pages', 'NUMERIC')
+        # print("@ATTRIBUTE", 'session_time', 'NUMERIC')
+        # print("@ATTRIBUTE", 'avg_session_time', 'NUMERIC')
+        # print("@ATTRIBUTE", 'visited_pages', 'NUMERIC')
 
-        for elem in self.most_visited_urls_list:
-            print("@ATTRIBUTE", elem, "{F,T}")
+        # for elem in self.most_visited_urls_list:
+        #     print("@ATTRIBUTE", elem, "{F,T}")
 
-        print("@DATA")
+        # print("@DATA")
 
-        print("Liczba najczesciej odwiedzanych stron wynosi:", len(self.most_visited_urls_list))
-        print("Całkowita liczba odwiedzanych stron wynosi:", total_count)
-
+        # print("Liczba najczesciej odwiedzanych stron wynosi:", len(self.most_visited_urls_list))
+        # print("Całkowita liczba odwiedzanych stron wynosi:", total_count)
 
     def extract_sessions(self):
         offset = timedelta(minutes=30)
@@ -149,6 +152,8 @@ class Parser(object):
                     unique_sessions[unique_user] = Data(host.host_name, counter)
                     unique_sessions[unique_user].add(url, time, req, line)
                     first_timestamp = time
+                    # print(unique_sessions[unique_user])
+
                 else:
                     unique_sessions[unique_user].add(url, time, req, line)
 
@@ -156,19 +161,8 @@ class Parser(object):
             if len(v) > 1:
                 self.unique_sessions[k] = v
 
-        print("liczba sesji wynosi ", len(self.unique_sessions))
-
-    def extract_urls(self):
-        for host in self.unique_hosts.values():
-            url, first_timestamp, req, line = host.get(0)
-            unique_user = host.host_name
-            self.unique_users_with_urls[unique_user] = Data(host.host_name, 0)
-            self.unique_users_with_urls[unique_user].add(url)
-            for i in range(1, len(host)):
-                url, time, req, line = host.get(i)
-                unique_user = host.host_name
-                self.unique_users_with_urls[unique_user] = Data(host.host_name, )
-                self.unique_users_with_urls[unique_user].add(url)
+        # print("Liczba użytkowników wynosi", len(self.unique_hosts))
+        # print("Liczba sesji wynosi ", len(self.unique_sessions))
 
     def get_avg_session_time(self):
         for session in self.unique_sessions.values():
@@ -189,11 +183,28 @@ class Parser(object):
         matrix = [[] for _ in range(len(self.unique_sessions))]
 
         for j, session in enumerate(self.unique_sessions.values()):
-            matrix[j].append(session.session_time.total_seconds())
-            matrix[j].append(session.avg_session_time.total_seconds())
-            matrix[j].append(len(session))
-            for url in self.most_visited_urls_list:
-                matrix[j].append("T" if url in session.request_url else "F")
+            if 0 <= session.session_time.total_seconds() < 200:
+                session.session_time = "short"
+            elif 200 <= session.session_time.total_seconds() < 800:
+                session.session_time = "medium"
+            elif 800 <= session.session_time.total_seconds():
+                session.session_time = "long"
+            matrix[j].append(session.session_time)
+            if 0 <= session.avg_session_time.total_seconds() < 50:
+                session.avg_session_time = "short"
+            elif 50 <= session.avg_session_time.total_seconds() < 200:
+                session.avg_session_time = "medium"
+            elif 200 <= session.avg_session_time.total_seconds():
+                session.avg_session_time = "long"
+            matrix[j].append(session.avg_session_time)
+            if 0 <= len(session) < 3:
+                matrix[j].append("few")
+            elif 3 <= len(session) < 8:
+                matrix[j].append("medium")
+            elif 8 <= len(session):
+                matrix[j].append("many")
+            # for url in self.most_visited_urls_list:
+            #     matrix[j].append("T" if url in session.request_url else "F")
 
         with open('input_session_analyze_file.csv', mode='w') as input_file:
             input_writer = csv.writer(input_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -202,17 +213,19 @@ class Parser(object):
                 input_writer.writerow(i)
 
     def make_user_analyze(self):
-        matrix = [[] for _ in range(len(self.unique_users_with_urls))]
+        matrix = [[] for _ in range(len(self.unique_hosts))]
 
-        for j, user in enumerate(self.unique_users_with_urls.values()):
+        for i, host in enumerate(self.unique_hosts.values()):
+            urls = set(host.request_url)
             for url in self.most_visited_urls_list:
-                matrix[j].append("T" if url in user.request_url else "F")
+                matrix[i].append('T' if url in urls else "F")
 
         with open('input_user_analyze_file.csv', mode='w') as input_file:
             input_writer = csv.writer(input_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
             for i in matrix:
                 input_writer.writerow(i)
+                # print(i)
 
 
 def main():
@@ -222,11 +235,10 @@ def main():
     parser.extract_values_into_data()
     parser.extract_values_into_dict()
     parser.extract_most_visited_urls()
-    # parser.extract_sessions()
-    # parser.get_avg_session_time()
-    # parser.get_session_time()
-    # parser.make_session_analyze()
-    parser.extract_urls()
+    parser.extract_sessions()
+    parser.get_avg_session_time()
+    parser.get_session_time()
+    parser.make_session_analyze()
     parser.make_user_analyze()
 
 
