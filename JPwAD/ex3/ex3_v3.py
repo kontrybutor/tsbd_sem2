@@ -81,16 +81,18 @@ print("SGD Accuracy after PCA:", model.score(X_test_reduced, y_test))
 
 
 walkers_df_without_target = walkers_df.drop('activity', 1)
-corr = walkers_df_without_target.corr().abs()
-plt.figure(figsize=(16, 14))
-sns.heatmap(corr,
-            annot=True,
-            cmap=plt.cm.Reds,
-            xticklabels=corr.columns,
-            yticklabels=corr.columns)
-plt.show()
+# corr = walkers_df_without_target.corr().abs()
+# plt.figure(figsize=(16, 14))
+# sns.heatmap(corr,
+#             annot=True,
+#             cmap=plt.cm.Reds,
+#             xticklabels=corr.columns,
+#             yticklabels=corr.columns)
+# plt.show()
 
-reduced_walkers_df = walkers_df[['activity', 'acceleration_x', 'acceleration_z']]
+
+print(walkers_df_without_target.var().sort_values())
+reduced_walkers_df = walkers_df[['activity', 'acceleration_z', 'acceleration_y']]
 
 
 reduced_data = reduced_walkers_df.values
@@ -114,7 +116,7 @@ for n_iter in n_iters:
 plt.title("Effect of n_iter for SGD for 2 attr with the smallest variance")
 plt.xlabel("n_iter")
 plt.ylabel("Accuracy score")
-plt.ylim([0.5, 0.8])
+# plt.ylim([0.5, 0.8])
 plt.plot(n_iters, scores)
 plt.show()
 
