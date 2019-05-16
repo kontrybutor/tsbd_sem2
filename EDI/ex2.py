@@ -1,10 +1,9 @@
 import re
 import csv
-import arff
-from pprint import pprint
+
 
 def load_html_file(filename):
-    with open(filename, "r") as html_file:
+    with open(filename, "r", encoding="ISO-8859-1") as html_file:
         data = html_file.read()
 
     return data
@@ -26,12 +25,14 @@ def postprocess_text(text):
     documents = documents.replace('\n', "")
     documents = documents.replace('\t', "")
     documents = documents.replace('\r', "")
+    documents = documents.replace('\"', "")
+    documents = documents.replace('\s', "")
     documents = documents.split("DOKUMENT")
 
     return documents
 
 
-filename = "travelassist_conc.html"
+filename = "travelassist_crawler.html"
 html_data = load_html_file(filename)
 
 cleaned_text = clean_html(html_data)
@@ -48,21 +49,10 @@ print("@data")
 
 for i, doc in enumerate(documents_list):
     output[i] = ["Dokument_{}".format(str(i+1)), doc]
-    # output['Dokument ' + str(i + 1)] = doc
 
 
-# pprint(output)
-
-#
-with open('crawl_csv_better.arff', mode='w') as input_file:
+with open('crawled.arff', mode='w') as input_file:
     input_writer = csv.writer(input_file, delimiter=',')
     for i in output:
         # print (i)
-        # input_writer.writerow(i)
-
-
-# with open('crawl_csv_better [SubtitleTools.com].arff', 'rb') as data_arff:
-#     # lines = [x.decode('cp1252').strip() for x in data_arff.readlines()]
-#     f = arff.load(data_arff)
-#     # print (arff.dumps(f))
-
+        input_writer.writerow(i)
