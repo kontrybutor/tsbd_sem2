@@ -37,7 +37,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 n_iters = [1, 10, 20, 30, 50, 70, 85, 100, 150, 300]
 scores = []
 losses = []
-start = timer()
+start1 = timer()
 for n_iter in n_iters:
     model = MLPClassifier(hidden_layer_sizes=(20, 20, 20), max_iter=n_iter,)
     model.fit(X_train, y_train)
@@ -45,7 +45,7 @@ for n_iter in n_iters:
     # scores.append(model.score(X_test, y_test))
     scores.append(cv_scores.mean())
     losses.append(model.loss_)
-end = timer()
+end1 = timer()
 plt.ylabel('cost')
 plt.xlabel('iterations')
 plt.title("Learning rate before PCA")
@@ -59,7 +59,7 @@ plt.plot(n_iters, scores)
 plt.show()
 # print("MLP Accuracy on input dataset", model.score(X_test, y_test))
 print("MLP Accuracy on input dataset: %0.2f (+/- %0.2f)" % (np.mean(scores), np.std(scores)))
-print("Elapsed time:", end - start)
+print("Elapsed time:", end1 - start1)
 
 pca = PCA(n_components=2)
 pca.fit(X_scaled)
@@ -76,7 +76,7 @@ X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(X_pca, y_pca
 n_iters = [1, 10, 20, 30, 50, 70, 85, 100, 150, 300]
 pca_scores = []
 losses = []
-start = timer()
+start2 = timer()
 for n_iter in n_iters:
     model = MLPClassifier(hidden_layer_sizes=(20, 20, 20), max_iter=n_iter, )
     model.fit(X_train_pca, y_train_pca)
@@ -84,7 +84,7 @@ for n_iter in n_iters:
     # pca_scores.append(model.score(X_test_pca, y_test_pca))
     pca_scores.append(cv_scores.mean())
     losses.append(model.loss_)
-end = timer()
+end2 = timer()
 plt.ylabel('cost')
 plt.xlabel('iterations')
 plt.title("Learning rate after PCA")
@@ -98,7 +98,7 @@ plt.plot(n_iters, pca_scores)
 plt.show()
 # print("MLP Accuracy after PCA:", model.score(X_test_pca, y_test_pca))
 print("MLP Accuracy after PCA: %0.2f (+/- %0.2f)" % (np.mean(pca_scores), np.std(pca_scores)))
-print("Elapsed time:", end - start)
+print("Elapsed time:", end2 - start2)
 
 
 # print(spam_df.var().sort_values())
@@ -216,12 +216,23 @@ plt.ylabel('Distortion')
 plt.title('The Elbow Method showing the optimal k for PCA')
 plt.show()
 
-pca_kmeans = KMeans(n_clusters=5)
+pca_kmeans = KMeans(n_clusters=2)
 pca_kmeans.fit(X_pca)
 labels = pca_kmeans.predict(X_pca)
 centroids = pca_kmeans.cluster_centers_
 print("Sum of squared distances of samples to their closest cluster center for PCA :", pca_kmeans.inertia_)
-fig = plt.figure(figsize=(5, 5))
+plt.figure(figsize=(10, 10))
+plt.subplot(211)
+colmap = {1: 'r', 2: 'g', 3: 'b', 4: 'm', 5: 'black'}
+colors = map(lambda x: colmap[x+1], y)
+plt.scatter(pca_data[0], pca_data[1], color=list(colors), alpha=0.5, edgecolor='k')
+for idx, centroid in enumerate(centroids):
+    plt.scatter(*centroid, color=colmap[idx+1])
+# plt.xlim(0, 2000)
+# plt.ylim(0, 2000)
+plt.title('Original clusters for PCA')
+
+plt.subplot(212)
 colmap = {1: 'r', 2: 'g', 3: 'b', 4: 'm', 5: 'black'}
 colors = map(lambda x: colmap[x+1], labels)
 plt.scatter(pca_data[0], pca_data[1], color=list(colors), alpha=0.5, edgecolor='k')
@@ -229,7 +240,7 @@ for idx, centroid in enumerate(centroids):
     plt.scatter(*centroid, color=colmap[idx+1])
 # plt.xlim(0, 2000)
 # plt.ylim(0, 2000)
-plt.title('Cluster for PCA')
+plt.title('Clusters after PCA')
 plt.show()
 
 #######################################################################
@@ -278,18 +289,32 @@ plt.ylabel('Distortion')
 plt.title('The Elbow Method showing the optimal k for chi2 selection')
 plt.show()
 
-chi_kmeans = KMeans(n_clusters=5)
+chi_kmeans = KMeans(n_clusters=2)
 chi_kmeans.fit(X_chi)
 labels = chi_kmeans.predict(X_chi)
+# print(labels)
+# print(y)
 centroids = chi_kmeans.cluster_centers_
 print("Sum of squared distances of samples to their closest cluster center for chi2 selection:", chi_kmeans.inertia_)
-fig = plt.figure(figsize=(5, 5))
+plt.figure(figsize=(10, 10))
+plt.subplot(211)
+colmap = {1: 'r', 2: 'g', 3: 'b', 4: 'm', 5: 'black'}
+colors = map(lambda x: colmap[x+1], y)
+plt.scatter(X_kbest_features[0], X_kbest_features[1], color=list(colors), alpha=0.5, edgecolor='k')
+for idx, centroid in enumerate(centroids):
+    plt.scatter(*centroid, color=colmap[idx+1])
+plt.xlim(0, 3000)
+plt.ylim(0, 4000)
+plt.title('Original clusters after chi2 test')
+# plt.show()
+
+plt.subplot(212)
 colmap = {1: 'r', 2: 'g', 3: 'b', 4: 'm', 5: 'black'}
 colors = map(lambda x: colmap[x+1], labels)
 plt.scatter(X_kbest_features[0], X_kbest_features[1], color=list(colors), alpha=0.5, edgecolor='k')
 for idx, centroid in enumerate(centroids):
     plt.scatter(*centroid, color=colmap[idx+1])
-plt.xlim(0, 4000)
+plt.xlim(0, 3000)
 plt.ylim(0, 4000)
-plt.title('Cluster for chi2 test')
+plt.title('Clusters after chi2 test')
 plt.show()
